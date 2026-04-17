@@ -1,0 +1,140 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.errorWrap {
+  margin-bottom: 16px;
+}
+
+.loader {
+  text-align: center;
+  padding: 48px;
+}
+
+.statsCard {
+  padding: 20px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 12px;
+  }
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.statItem {
+  background: var(--g-color-base-generic);
+  border-radius: 8px;
+  padding: 8px 12px;
+  text-align: center;
+}
+
+.statValue {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.statLabel {
+  font-size: 11px;
+  color: var(--g-color-text-secondary);
+  margin-top: 2px;
+}
+
+.connectedSection {
+  margin-top: 12px;
+}
+
+.connectedTitle {
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.connectedList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.chartCard {
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+  }
+}
+
+.chartButtons {
+  display: flex;
+  gap: 8px;
+}
+
+.chartHint {
+  font-size: 11px;
+  color: var(--g-color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.chartWrap {
+  height: 350px;
+}
+
+.ipCard {
+  padding: 20px;
+
+  h3 {
+    margin: 0 0 12px;
+  }
+}
+
+.ipList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ipItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+}
+
+.ipTooltip {
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.ipTooltipBlocked {
+  color: var(--g-color-text-danger);
+}
+
+.ipLegend {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--g-color-text-secondary);
+  display: flex;
+  gap: 12px;
+}

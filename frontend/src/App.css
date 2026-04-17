@@ -1,0 +1,48 @@
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--g-color-base-background);
+  color: var(--g-color-text-primary);
+}
+
+.app-content {
+  flex: 1;
+  padding: 24px;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+  overflow-y: auto;
+  height: 100vh;
+}
+
+/* shared field style used by Nodes card inline */
+.proxy-card-field {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.proxy-card-field .label {
+  color: var(--g-color-text-secondary);
+}
+
+.dialog-field {
+  margin-bottom: 16px;
+}
+
+.dialog-field label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 13px;
+  color: var(--g-color-text-secondary);
+}
+
+.toast-message {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}

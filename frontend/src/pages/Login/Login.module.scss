@@ -1,0 +1,31 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+.card {
+  width: 400px;
+  padding: 32px;
+
+  h2 {
+    margin: 0 0 24px 0;
+    text-align: center;
+  }
+}
+
+.field {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--g-color-text-secondary);
+  }
+}
+
+.errorWrap {
+  margin-bottom: 16px;
+}

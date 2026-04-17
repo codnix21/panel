@@ -1,0 +1,42 @@
+.card {
+  padding: 20px;
+  cursor: pointer;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.note {
+  font-size: 13px;
+  color: var(--g-color-text-secondary);
+  margin-bottom: 8px;
+}
+
+.field {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  font-size: 13px;
+
+  .label {
+    color: var(--g-color-text-secondary);
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--g-color-line-generic);
+}

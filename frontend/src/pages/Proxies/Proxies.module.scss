@@ -1,0 +1,37 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.errorWrap {
+  margin-bottom: 16px;
+}
+
+.loader {
+  text-align: center;
+  padding: 48px;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--g-color-text-secondary);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}

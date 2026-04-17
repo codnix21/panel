@@ -1,0 +1,27 @@
+.title {
+  margin: 0 0 24px 0;
+}
+
+.card {
+  padding: 24px;
+  max-width: 500px;
+
+  h3 {
+    margin: 0 0 16px 0;
+  }
+}
+
+.field {
+  margin-bottom: 16px;
+
+  label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 13px;
+    color: var(--g-color-text-secondary);
+  }
+}
+
+.hint {
+  margin-top: 8px;
+}

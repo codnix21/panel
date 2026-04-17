@@ -1,0 +1,62 @@
+.header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.proxiesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.proxyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--g-color-text-secondary);
+}
+
+.loader {
+  text-align: center;
+  padding: 48px;
+}
+
+.errorWrap {
+  margin-bottom: 16px;
+}
+
+.nameRow {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.section {
+  margin-top: 32px;
+}
+
+.sectionBlacklist {
+  margin-top: 24px;
+}
+
+.sectionCard {
+  padding: 16px;
+}
+
+.sectionHint {
+  font-size: 13px;
+  color: var(--g-color-text-secondary);
+  margin: 0 0 8px;
+}
+
+.saveRow {
+  margin-top: 8px;
+}

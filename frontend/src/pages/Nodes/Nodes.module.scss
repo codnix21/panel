@@ -1,0 +1,111 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  cursor: pointer;
+  transition: transform 0.15s;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.cardTopLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.healthDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.healthDotChecking {
+  background-color: #888;
+}
+
+.healthDotOnline {
+  background-color: #3bc935;
+}
+
+.healthDotOffline {
+  background-color: #ff4040;
+}
+
+.cardName {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.proxiesSection {
+  margin-top: 10px;
+  border-top: 1px solid var(--g-color-line-generic);
+  padding-top: 8px;
+}
+
+.proxiesSectionTitle {
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.proxyRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  padding: 2px 0;
+}
+
+.proxyRowRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.proxyRowConns {
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+}
+
+.cardActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+}
+
+.loader {
+  text-align: center;
+  padding: 48px;
+}
+
+.empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--g-color-text-secondary);
+}
