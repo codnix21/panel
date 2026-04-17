@@ -134,4 +134,4 @@ docker compose up -d --build
 
 ## Связанный проект
 
-Сервис-нода (устанавливается на каждый прокси-сервер): [mtproto-node](https://github.com/<YOUR_USERNAME>/<YOUR_NODE_REPO>)
+Сервис-нода (устанавливается на каждый прокси-сервер): [mtproto-node](https://github.com/codnix21/node.git)
