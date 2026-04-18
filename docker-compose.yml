@@ -21,10 +21,14 @@ services:
     build: ./backend
     container_name: mtproto-panel-backend
     restart: unless-stopped
+    # Все переменные из .env (PANEL_ALLOWED_IPS, HEALTH_*, TELEGRAM_*, TRUST_PROXY и т.д.)
+    env_file:
+      - .env
     depends_on:
       db:
         condition: service_healthy
     environment:
+      # Переопределяют .env при конфликте: внутри Docker-сети БД — сервис db
       PORT: "3000"
       DB_HOST: db
       DB_PORT: "5432"
