@@ -6,6 +6,7 @@ import NodeDetail from './pages/NodeDetail';
 import ProxyDetail from './pages/ProxyDetail';
 import Proxies from './pages/Proxies';
 import Settings from './pages/Settings';
+import Audit from './pages/Audit';
 import Layout from './components/Layout';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -53,6 +54,14 @@ export default function App() {
         element={
           <PrivateRoute>
             <Settings />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/audit"
+        element={
+          <PrivateRoute>
+            <Audit />
           </PrivateRoute>
         }
       />

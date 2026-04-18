@@ -1,21 +1,44 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, Loader, Label, Alert, TextArea } from '@gravity-ui/uikit';
+import { Button, Card, Loader, Label, Alert, TextArea, Dialog, TextInput } from '@gravity-ui/uikit';
 import AddProxyDialog from '../../components/AddProxyDialog';
 import EditProxyDialog from '../../components/EditProxyDialog';
 import ProxyCard from '../../components/ProxyCard';
 import FlagIcon from '../../components/FlagIcon';
+import CopyValueButton from '../../components/CopyValueButton';
+import { rotateNodeToken } from '../../api';
 import { useNodeDetail } from '../../hooks/useNodeDetail';
 import s from './NodeDetail.module.scss';
 
 export default function NodeDetail() {
   const navigate = useNavigate();
+  const [rotateOpen, setRotateOpen] = useState(false);
+  const [newToken, setNewToken] = useState('');
+  const [rotateHint, setRotateHint] = useState('');
+  const [rotateLoading, setRotateLoading] = useState(false);
   const {
     nodeId, node, proxies, loading, error, setError,
     showAdd, setShowAdd, editProxy, setEditProxy, copiedId,
     domainsText, setDomainsText, domainsLoading, domainsSaving, domainsLoaded,
     blacklistText, setBlacklistText, blacklistLoading, blacklistSaving, blacklistLoaded,
-    nodeGeo, loadData, handleDelete, handleCopyLink, handleSaveDomains, handleSaveBlacklist,
+    nodeGeo,     loadData, handleDelete, handleCopyLink, handleSaveDomains, handleSaveBlacklist,
   } = useNodeDetail();
+
+  const handleRotateToken = async () => {
+    setRotateLoading(true);
+    setNewToken('');
+    setRotateHint('');
+    try {
+      const data = await rotateNodeToken(nodeId);
+      setNewToken(data.token);
+      setRotateHint(data.hint);
+      loadData();
+    } catch (e: any) {
+      setError(e.message || 'Ошибка');
+    } finally {
+      setRotateLoading(false);
+    }
+  };
 
   if (loading) {
     return <div className={s.loader}><Loader size="l" /></div>;
@@ -29,9 +52,43 @@ export default function NodeDetail() {
           <>
             <h2 className={s.nameRow}>{nodeGeo && <FlagIcon code={nodeGeo} />}{node.name}</h2>
             <Label theme="info">{node.ip}:{node.port}</Label>
+            <Button view="outlined" onClick={() => { setRotateOpen(true); setNewToken(''); setRotateHint(''); }}>
+              Сменить токен API
+            </Button>
           </>
         )}
       </div>
+
+      <Dialog open={rotateOpen} onClose={() => setRotateOpen(false)} size="l">
+        <Dialog.Header caption="Смена токена ноды" />
+        <Dialog.Body>
+          <p className={s.rotateIntro}>
+            Новый токен сохранится в панели. На сервере ноды обновите <code>AUTH_TOKEN</code> в <code>.env</code> и перезапустите контейнеры.
+          </p>
+          {!newToken ? (
+            <Button view="action" loading={rotateLoading} onClick={handleRotateToken}>
+              Сгенерировать и сохранить
+            </Button>
+          ) : (
+            <>
+              <div className={s.rotateField}>
+                <label>Новый токен (скопируйте сейчас)</label>
+                <div className={s.rotateInputRow}>
+                  <TextInput value={newToken} size="l" disabled className={s.rotateInput} />
+                  <CopyValueButton value={newToken} title="Копировать токен" />
+                </div>
+              </div>
+              {rotateHint && <p className={s.rotateHint}>{rotateHint}</p>}
+            </>
+          )}
+        </Dialog.Body>
+        <Dialog.Footer
+          onClickButtonApply={() => setRotateOpen(false)}
+          onClickButtonCancel={() => setRotateOpen(false)}
+          textButtonApply="Закрыть"
+          textButtonCancel="Отмена"
+        />
+      </Dialog>
 
       {error && (
         <div className={s.errorWrap}>

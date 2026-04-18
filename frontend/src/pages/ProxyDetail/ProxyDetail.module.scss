@@ -9,6 +9,95 @@
   margin-bottom: 16px;
 }
 
+.diagCard {
+  padding: 20px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 12px;
+  }
+}
+
+.diagRow {
+  display: grid;
+  grid-template-columns: minmax(140px, 200px) 1fr;
+  gap: 8px 16px;
+  font-size: 13px;
+  margin-bottom: 10px;
+  align-items: start;
+}
+
+.diagLabel {
+  color: var(--g-color-text-secondary);
+}
+
+.diagValue {
+  word-break: break-word;
+}
+
+.diagValueRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  span:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.tgLinkWrap {
+  font-family: var(--g-font-family-monospace);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.diagHint {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--g-color-line-generic);
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+  line-height: 1.55;
+}
+
+.logsCard {
+  padding: 20px;
+  margin-bottom: 20px;
+
+  h3 {
+    margin: 0 0 12px;
+  }
+}
+
+.logsToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.logTailField {
+  width: 120px;
+}
+
+.logPre {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: min(480px, 50vh);
+  overflow: auto;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--g-color-base-generic);
+  border: 1px solid var(--g-color-line-generic);
+}
+
 .loader {
   text-align: center;
   padding: 48px;

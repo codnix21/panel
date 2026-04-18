@@ -3,16 +3,20 @@ import { useParams } from 'react-router-dom';
 import { copyToClipboard } from '../utils/clipboard';
 import {
   getNode,
+  getProxy,
   getProxyStats,
   getProxyLink,
   getProxyStatsHistory,
   getProxyIpHistory,
   getNodeBlacklist,
+  getProxyContainers,
   clearProxyHistory,
   pauseProxy,
   unpauseProxy,
   NodeData,
+  ProxyData,
   ProxyStatsData,
+  ProxyContainersDiagnostics,
   ConnectedIpInfo,
   StatsSnapshotData,
   IpHistoryEntryData,
@@ -23,6 +27,8 @@ export function useProxyDetail() {
   const nodeId = parseInt(nodeIdStr || '0', 10);
 
   const [node, setNode] = useState<NodeData | null>(null);
+  const [proxy, setProxy] = useState<ProxyData | null>(null);
+  const [containers, setContainers] = useState<ProxyContainersDiagnostics | null>(null);
   const [stats, setStats] = useState<ProxyStatsData | null>(null);
   const [statsHistory, setStatsHistory] = useState<StatsSnapshotData[]>([]);
   const [ipHistory, setIpHistory] = useState<IpHistoryEntryData[]>([]);
@@ -33,28 +39,37 @@ export function useProxyDetail() {
   const [togglingPause, setTogglingPause] = useState(false);
   const [clearing, setClearing] = useState(false);
   const [nodeGeo, setNodeGeo] = useState('');
+  const [tgLink, setTgLink] = useState('');
   const chartRef = useRef<any>(null);
 
   const loadStats = useCallback(async () => {
     if (!proxyId) return;
     try {
-      const data = await getProxyStats(nodeId, proxyId);
+      const [data, cont] = await Promise.all([
+        getProxyStats(nodeId, proxyId),
+        getProxyContainers(nodeId, proxyId).catch(() => null),
+      ]);
       setStats(data);
+      if (cont) setContainers(cont);
     } catch {}
   }, [nodeId, proxyId]);
 
   const loadAll = useCallback(async () => {
     if (!proxyId) return;
     try {
-      const [nodeData, statsData, history, ips, bl] = await Promise.all([
+      const [nodeData, proxyData, statsData, history, ips, bl, cont] = await Promise.all([
         getNode(nodeId),
+        getProxy(nodeId, proxyId),
         getProxyStats(nodeId, proxyId),
         getProxyStatsHistory(nodeId, proxyId),
         getProxyIpHistory(nodeId, proxyId),
         getNodeBlacklist(nodeId),
+        getProxyContainers(nodeId, proxyId).catch(() => null),
       ]);
       setNode(nodeData);
+      setProxy(proxyData);
       setStats(statsData);
+      setContainers(cont);
       setStatsHistory(history);
       setIpHistory(ips);
       setBlacklist(new Set(bl));
@@ -67,6 +82,24 @@ export function useProxyDetail() {
   }, [nodeId, proxyId]);
 
   useEffect(() => { loadAll(); }, [loadAll]);
+
+  useEffect(() => {
+    if (!proxyId) {
+      setTgLink('');
+      return;
+    }
+    let cancelled = false;
+    getProxyLink(nodeId, proxyId)
+      .then((link) => {
+        if (!cancelled) setTgLink(link);
+      })
+      .catch(() => {
+        if (!cancelled) setTgLink('');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [nodeId, proxyId]);
 
   useEffect(() => {
     if (node?.ip) {
@@ -153,8 +186,8 @@ export function useProxyDetail() {
   });
 
   return {
-    nodeId, node, stats, statsHistory, ipHistory: sortedIpHistory, blacklist,
-    loading, error, setError, copied, togglingPause, clearing, nodeGeo, chartRef,
+    nodeId, proxyId: proxyId || '', node, proxy, containers, stats, statsHistory, ipHistory: sortedIpHistory, blacklist,
+    loading, error, setError, copied, togglingPause, clearing, nodeGeo, tgLink, chartRef,
     connectedIpSet, statusTheme, statusLabel,
     handleCopyLink, handleTogglePause, handleClearHistory,
   };

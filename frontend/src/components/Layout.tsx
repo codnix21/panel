@@ -6,6 +6,7 @@ import {
   ArrowRightFromSquare,
   Gear,
   PlugConnection,
+  ListUl,
 } from '@gravity-ui/icons';
 import { logout } from '../api';
 
@@ -41,6 +42,13 @@ export default function Layout({ children }: LayoutProps) {
       icon: Gear,
       current: currentPath === '/settings',
       onItemClick: () => navigate('/settings'),
+    },
+    {
+      id: 'audit',
+      title: 'Аудит',
+      icon: ListUl,
+      current: currentPath === '/audit',
+      onItemClick: () => navigate('/audit'),
     },
   ];
 

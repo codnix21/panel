@@ -30,6 +30,31 @@ export default function Settings() {
           </Label>
         </div>
       </Card>
+
+      <Card view="outlined" className={s.card}>
+        <h3>Безопасность API панели</h3>
+        <div className={s.field}>
+          <label>Ограничение по IP</label>
+          <p className={s.securityText}>
+            Переменная окружения <code>PANEL_ALLOWED_IPS</code> — список IP через запятую (точное совпадение).
+            Пусто — доступ с любого IP. Эндпоинты <code>/api/health</code> и <code>/api/ready</code> не ограничиваются.
+          </p>
+        </div>
+        <div className={s.field}>
+          <label>За reverse proxy</label>
+          <p className={s.securityText}>
+            Установите <code>TRUST_PROXY=1</code>, чтобы учитывать заголовок <code>X-Forwarded-For</code> при проверке IP.
+          </p>
+        </div>
+        <div className={s.field}>
+          <label>Вход и секреты</label>
+          <p className={s.securityText}>
+            Лимит попыток логина: <code>LOGIN_RATE_LIMIT_WINDOW_MS</code> (окно, мс) и <code>LOGIN_RATE_LIMIT_MAX</code> (число запросов).
+            В режиме production сильный <code>JWT_SECRET</code> обязателен (≥32 символа, не дефолт); вне production можно задать{' '}
+            <code>REQUIRE_STRONG_SECRETS=1</code>.
+          </p>
+        </div>
+      </Card>
     </>
   );
 }

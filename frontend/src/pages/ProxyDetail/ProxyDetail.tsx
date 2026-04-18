@@ -1,5 +1,6 @@
+import { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Card, Loader, Label, Alert, Tooltip } from '@gravity-ui/uikit';
+import { Button, Card, Loader, Label, Alert, Tooltip, Select, TextInput } from '@gravity-ui/uikit';
 import { Line } from 'react-chartjs-2';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import 'chartjs-adapter-date-fns';
@@ -14,8 +15,33 @@ import {
   Legend,
   Filler,
 } from 'chart.js';
-import { ConnectedIpInfo } from '../../api';
+import {
+  ConnectedIpInfo,
+  getProxyLogs,
+  getNodeNginxLogs,
+  getNodeInfo,
+  checkNodePort,
+  type ContainerInspectSummary,
+} from '../../api';
 import FlagIcon from '../../components/FlagIcon';
+import CopyValueButton from '../../components/CopyValueButton';
+
+function maskVpnHost(url: string): string {
+  try {
+    const u = new URL(url);
+    const path = u.pathname.length > 1 ? `${u.pathname.slice(0, 32)}${u.pathname.length > 33 ? '…' : ''}` : '';
+    return `${u.hostname}${path ? path : ''}`;
+  } catch {
+    return 'указана';
+  }
+}
+
+function formatContainerSummary(c: ContainerInspectSummary | { status: string; running: false }): string {
+  const parts = [`${c.status}`, c.running ? 'running' : 'stopped'];
+  if ('exitCode' in c && c.exitCode != null && c.exitCode !== 0) parts.push(`exit ${c.exitCode}`);
+  if ('error' in c && c.error) parts.push(c.error);
+  return parts.join(' · ');
+}
 import { useProxyDetail } from '../../hooks/useProxyDetail';
 import { buildChartOptions, buildChartData } from '../../utils/chart';
 import s from './ProxyDetail.module.scss';
@@ -25,11 +51,77 @@ ChartJS.register(TimeScale, LinearScale, PointElement, LineElement, Title, Chart
 export default function ProxyDetail() {
   const navigate = useNavigate();
   const {
-    nodeId, node, stats, statsHistory, ipHistory, blacklist,
+    nodeId, proxyId, node, proxy, containers, stats, statsHistory, ipHistory, blacklist,
     loading, error, setError, copied, togglingPause, clearing, nodeGeo, chartRef,
-    connectedIpSet, statusTheme, statusLabel,
+    connectedIpSet, statusTheme, statusLabel, tgLink,
     handleCopyLink, handleTogglePause, handleClearHistory,
   } = useProxyDetail();
+
+  const [logTarget, setLogTarget] = useState<'proxy' | 'xray' | 'nginx'>('proxy');
+  const [logTail, setLogTail] = useState('500');
+  const [logsText, setLogsText] = useState('');
+  const [logsLoading, setLogsLoading] = useState(false);
+  const [logsErr, setLogsErr] = useState('');
+  const [tcpPort, setTcpPort] = useState('');
+  const [tcpLoading, setTcpLoading] = useState(false);
+  const [tcpResult, setTcpResult] = useState<{ ok: boolean; error?: string } | null>(null);
+
+  useEffect(() => {
+    if (!proxy || !nodeId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const info = await getNodeInfo(nodeId);
+        if (cancelled) return;
+        const p = proxy.listenPort && proxy.listenPort > 0 ? proxy.listenPort : info.nginxPort;
+        setTcpPort(String(p));
+      } catch {
+        if (!cancelled) setTcpPort(proxy.listenPort ? String(proxy.listenPort) : '443');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [nodeId, proxy?.id, proxy?.listenPort]);
+
+  const fetchLogs = useCallback(async () => {
+    if (!proxyId) return;
+    setLogsErr('');
+    setLogsLoading(true);
+    try {
+      const tail = Math.min(Math.max(parseInt(logTail, 10) || 500, 1), 5000);
+      if (logTarget === 'nginx') {
+        const data = await getNodeNginxLogs(nodeId, tail);
+        setLogsText(data.logs);
+      } else {
+        const data = await getProxyLogs(nodeId, proxyId, { target: logTarget, tail });
+        setLogsText(data.logs);
+      }
+    } catch (e: any) {
+      setLogsErr(e.message || 'Ошибка загрузки');
+      setLogsText('');
+    } finally {
+      setLogsLoading(false);
+    }
+  }, [nodeId, proxyId, logTarget, logTail]);
+
+  const handleTcpCheck = useCallback(async () => {
+    const port = parseInt(tcpPort, 10);
+    if (!Number.isFinite(port) || port < 1 || port > 65535) {
+      setTcpResult({ ok: false, error: 'Некорректный порт' });
+      return;
+    }
+    setTcpLoading(true);
+    setTcpResult(null);
+    try {
+      const r = await checkNodePort(nodeId, port);
+      setTcpResult({ ok: r.ok, error: r.error });
+    } catch (e: any) {
+      setTcpResult({ ok: false, error: e.message || 'Ошибка' });
+    } finally {
+      setTcpLoading(false);
+    }
+  }, [nodeId, tcpPort]);
 
   if (loading) {
     return <div className={s.loader}><Loader size="l" /></div>;
@@ -56,6 +148,143 @@ export default function ProxyDetail() {
         <div className={s.errorWrap}>
           <Alert theme="danger" message={error} onClose={() => setError('')} />
         </div>
+      )}
+
+      {node && proxy && (
+        <Card view="outlined" className={s.diagCard}>
+          <h3>Параметры подключения и VPN</h3>
+          <div className={s.diagRow}>
+            <div className={s.diagLabel}>IP сервера (в tg:// ссылке)</div>
+            <div className={`${s.diagValue} ${s.diagValueRow}`}>
+              <span>{node.ip}</span>
+              <CopyValueButton value={node.ip} title="Копировать IP" />
+            </div>
+          </div>
+          <div className={s.diagRow}>
+            <div className={s.diagLabel}>Порт в ссылке</div>
+            <div className={`${s.diagValue} ${s.diagValueRow}`}>
+              <span>
+                {proxy.listenPort != null && proxy.listenPort > 0
+                  ? String(proxy.listenPort)
+                  : 'из ссылки (на ноде это NGINX_PORT из .env, часто 443)'}
+              </span>
+              {proxy.listenPort != null && proxy.listenPort > 0 ? (
+                <CopyValueButton value={String(proxy.listenPort)} title="Копировать порт" />
+              ) : null}
+            </div>
+          </div>
+          <div className={s.diagRow}>
+            <div className={s.diagLabel}>Fake TLS (SNI)</div>
+            <div className={`${s.diagValue} ${s.diagValueRow}`}>
+              <span>{proxy.domain}</span>
+              <CopyValueButton value={proxy.domain} title="Копировать домен" />
+            </div>
+          </div>
+          <div className={s.diagRow}>
+            <div className={s.diagLabel}>Ссылка tg://</div>
+            <div className={`${s.diagValue} ${s.diagValueRow}`}>
+              <span className={s.tgLinkWrap}>{tgLink || '…'}</span>
+              <CopyValueButton value={tgLink} disabled={!tgLink} title="Копировать ссылку" />
+            </div>
+          </div>
+          <div className={s.diagRow}>
+            <div className={s.diagLabel}>VLESS-туннель до Telegram</div>
+            <div className={s.diagValue}>
+              {proxy.vpnSubscription
+                ? `включён (подписка: ${maskVpnHost(proxy.vpnSubscription)})`
+                : 'выключен — трафик идёт с IP ноды напрямую до DC'}
+            </div>
+          </div>
+          {proxy.vpnContainerName && (
+            <div className={s.diagRow}>
+              <div className={s.diagLabel}>Контейнер xray</div>
+              <div className={s.diagValue}>{proxy.vpnContainerName}</div>
+            </div>
+          )}
+          {containers && (
+            <>
+              <div className={s.diagRow}>
+                <div className={s.diagLabel}>Docker: прокси</div>
+                <div className={s.diagValue}>{formatContainerSummary(containers.proxy)}</div>
+              </div>
+              {containers.xray && (
+                <div className={s.diagRow}>
+                  <div className={s.diagLabel}>Docker: xray</div>
+                  <div className={s.diagValue}>{formatContainerSummary(containers.xray)}</div>
+                </div>
+              )}
+            </>
+          )}
+          <div className={s.diagRow}>
+            <div className={s.diagLabel}>TCP с панели до ноды</div>
+            <div className={s.diagValue} style={{ display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+              <TextInput value={tcpPort} onUpdate={setTcpPort} placeholder="443" size="s" style={{ width: 100 }} />
+              <Button size="s" view="outlined" onClick={handleTcpCheck} loading={tcpLoading}>
+                Проверить порт
+              </Button>
+              {tcpResult && (
+                <Label theme={tcpResult.ok ? 'success' : 'danger'} size="s">
+                  {tcpResult.ok ? 'порт открыт' : tcpResult.error || 'недоступен'}
+                </Label>
+              )}
+            </div>
+          </div>
+          <div className={s.diagHint}>
+            <strong>Зачем VLESS:</strong> если нода в регионе, где до Telegram DC нельзя достучаться напрямую (например РФ),
+            подписка поднимает отдельный туннель на зарубежный сервер — иначе прокси не заработает.
+            Если сервер уже «видит» Telegram без блокировок — поле подписки оставьте пустым.
+            <br /><br />
+            <strong>Если в Telegram не подключается:</strong> проверьте, что на ноде открыт порт из ссылки (firewall),
+            контейнер прокси в статусе «работает», и при необходимости совпадает SNI-домен с маскировкой.
+          </div>
+        </Card>
+      )}
+
+      {node && proxy && (
+        <Card view="outlined" className={s.logsCard}>
+          <h3>Логи Docker</h3>
+          <div className={s.logsToolbar}>
+            <div>
+              <div className={s.diagLabel} style={{ marginBottom: 4 }}>Контейнер</div>
+              <Select
+                width="max"
+                value={[logTarget]}
+                onUpdate={(v) => setLogTarget((v[0] as 'proxy' | 'xray' | 'nginx') || 'proxy')}
+                options={[
+                  { value: 'proxy', content: 'Прокси (telemt)' },
+                  { value: 'xray', content: 'VPN (xray)' },
+                  { value: 'nginx', content: 'Nginx (вся нода)' },
+                ]}
+              />
+            </div>
+            <div className={s.logTailField}>
+              <div className={s.diagLabel} style={{ marginBottom: 4 }}>Строк (tail)</div>
+              <TextInput value={logTail} onUpdate={setLogTail} placeholder="500" size="m" />
+            </div>
+            <Button view="action" size="m" onClick={fetchLogs} loading={logsLoading}>
+              Загрузить
+            </Button>
+          </div>
+          {logsErr && (
+            <div style={{ marginBottom: 8 }}>
+              <Alert theme="danger" message={logsErr} />
+            </div>
+          )}
+          {!proxy.vpnSubscription && logTarget === 'xray' && (
+            <div style={{ marginBottom: 8, fontSize: 12, color: 'var(--g-color-text-secondary)' }}>
+              Для этого прокси не задана VPN-подписка — логов xray не будет.
+            </div>
+          )}
+          {logsText ? (
+            <pre className={s.logPre}>{logsText}</pre>
+          ) : (
+            !logsErr && (
+              <div style={{ fontSize: 12, color: 'var(--g-color-text-secondary)' }}>
+                Нажмите «Загрузить», чтобы получить последние строки лога с ноды.
+              </div>
+            )
+          )}
+        </Card>
       )}
 
       {stats && (

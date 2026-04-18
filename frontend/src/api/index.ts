@@ -95,6 +95,30 @@ export async function deleteNode(id: number) {
   return request<{ success: boolean }>(`/nodes/${id}`, { method: 'DELETE' });
 }
 
+export async function rotateNodeToken(nodeId: number): Promise<{ token: string; node: NodeData; hint: string }> {
+  return request(`/nodes/${nodeId}/rotate-token`, { method: 'POST' });
+}
+
+export interface AuditLogRow {
+  id: number;
+  user_id: number | null;
+  username: string | null;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  details: Record<string, unknown> | null;
+  ip: string | null;
+  created_at: string;
+}
+
+export async function getAuditLog(params?: { limit?: number; offset?: number }): Promise<AuditLogRow[]> {
+  const q = new URLSearchParams();
+  if (params?.limit != null) q.set('limit', String(params.limit));
+  if (params?.offset != null) q.set('offset', String(params.offset));
+  const qs = q.toString();
+  return request<AuditLogRow[]>(`/audit${qs ? `?${qs}` : ''}`);
+}
+
 export async function checkNodeHealth(id: number): Promise<{ online: boolean }> {
   return request<{ online: boolean }>(`/nodes/${id}/health`);
 }
@@ -192,6 +216,66 @@ export async function createProxy(nodeId: number, data: CreateProxyRequest) {
   return request<ProxyData>(`/nodes/${nodeId}/proxies`, {
     method: 'POST',
     body: JSON.stringify(data),
+  });
+}
+
+export async function getProxy(nodeId: number, proxyId: string): Promise<ProxyData> {
+  return request<ProxyData>(`/nodes/${nodeId}/proxies/${proxyId}`);
+}
+
+export interface ProxyLogsResponse {
+  target: string;
+  tail: number;
+  containerName: string;
+  logs: string;
+}
+
+export async function getProxyLogs(
+  nodeId: number,
+  proxyId: string,
+  params?: { target?: 'proxy' | 'xray'; tail?: number }
+): Promise<ProxyLogsResponse> {
+  const q = new URLSearchParams();
+  if (params?.target) q.set('target', params.target);
+  if (params?.tail != null) q.set('tail', String(params.tail));
+  const qs = q.toString();
+  return request<ProxyLogsResponse>(`/nodes/${nodeId}/proxies/${proxyId}/logs${qs ? `?${qs}` : ''}`);
+}
+
+export interface ContainerInspectSummary {
+  status: string;
+  running: boolean;
+  exitCode?: number;
+  error?: string;
+  startedAt?: string;
+  finishedAt?: string;
+}
+
+export interface ProxyContainersDiagnostics {
+  proxy: ContainerInspectSummary | { status: string; running: false };
+  xray?: ContainerInspectSummary | { status: string; running: false };
+}
+
+export async function getProxyContainers(nodeId: number, proxyId: string): Promise<ProxyContainersDiagnostics> {
+  return request<ProxyContainersDiagnostics>(`/nodes/${nodeId}/proxies/${proxyId}/containers`);
+}
+
+export async function getNodeNginxLogs(nodeId: number, tail?: number): Promise<ProxyLogsResponse> {
+  const q = tail != null ? `?tail=${tail}` : '';
+  return request<ProxyLogsResponse>(`/nodes/${nodeId}/nginx-logs${q}`);
+}
+
+export async function getNodeInfo(nodeId: number): Promise<{ nginxPort: number }> {
+  return request<{ nginxPort: number }>(`/nodes/${nodeId}/info`);
+}
+
+export async function checkNodePort(
+  nodeId: number,
+  port: number
+): Promise<{ ok: boolean; host: string; port: number; error?: string }> {
+  return request(`/nodes/${nodeId}/check-port`, {
+    method: 'POST',
+    body: JSON.stringify({ port }),
   });
 }
 

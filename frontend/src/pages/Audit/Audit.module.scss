@@ -1,0 +1,59 @@
+.title {
+  margin: 0 0 8px;
+}
+
+.subtitle {
+  margin: 0 0 20px;
+  color: var(--g-color-text-secondary);
+  font-size: 14px;
+}
+
+.error {
+  color: var(--g-color-text-danger);
+  margin-bottom: 12px;
+}
+
+.card {
+  padding: 20px;
+}
+
+.loader {
+  text-align: center;
+  padding: 32px;
+}
+
+.empty {
+  color: var(--g-color-text-secondary);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+
+  th,
+  td {
+    padding: 8px 10px;
+    text-align: left;
+    border-bottom: 1px solid var(--g-color-line-generic);
+  }
+
+  th {
+    color: var(--g-color-text-secondary);
+    font-weight: 500;
+  }
+
+  code {
+    font-size: 12px;
+  }
+}
+
+.pager {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
