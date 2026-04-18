@@ -14,9 +14,25 @@ interface Props {
   onDelete: () => void;
   onCopyLink: () => void;
   onStatusChange?: () => void;
+  /** Режим мультивыбора: чекбокс вместо перехода по клику на карточку */
+  selectionMode?: boolean;
+  selected?: boolean;
+  onToggleSelect?: () => void;
 }
 
-export default function ProxyCard({ proxy, nodeId, nodeName, copied, onEdit, onDelete, onCopyLink, onStatusChange }: Props) {
+export default function ProxyCard({
+  proxy,
+  nodeId,
+  nodeName,
+  copied,
+  onEdit,
+  onDelete,
+  onCopyLink,
+  onStatusChange,
+  selectionMode,
+  selected,
+  onToggleSelect,
+}: Props) {
   const navigate = useNavigate();
   const [togglingPause, setTogglingPause] = useState(false);
 
@@ -60,8 +76,26 @@ export default function ProxyCard({ proxy, nodeId, nodeName, copied, onEdit, onD
   ];
 
   return (
-    <Card type="action" view="outlined" className={s.card} onClick={handleCardClick}>
+    <Card
+      type="action"
+      view="outlined"
+      className={`${s.card}${selected ? ` ${s.cardSelected}` : ''}`}
+      onClick={handleCardClick}
+    >
       <div className={s.header}>
+        {selectionMode && (
+          <span
+            className={s.checkbox}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelect?.();
+            }}
+            role="checkbox"
+            aria-checked={selected}
+          >
+            <input type="checkbox" checked={!!selected} readOnly tabIndex={-1} />
+          </span>
+        )}
         <span className={s.name}>{proxy.name || `Proxy ${proxy.id}`}</span>
         <Label theme={statusTheme} size="s">
           {statusLabel}
@@ -72,6 +106,9 @@ export default function ProxyCard({ proxy, nodeId, nodeName, copied, onEdit, onD
         <div className={s.note}>{proxy.note}</div>
       )}
 
+      {proxy.tags && proxy.tags.length > 0 && (
+        <div className={s.tags}>{proxy.tags.join(', ')}</div>
+      )}
       {nodeName && (
         <div className={s.field}>
           <span className={s.label}>Нода</span>

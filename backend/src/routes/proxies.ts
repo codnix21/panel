@@ -2,39 +2,169 @@ import { Router, Response } from 'express';
 import { pool } from '../db';
 import { AuthRequest, authMiddleware } from '../middleware/auth';
 import { auditReq } from '../middleware/auditHelpers';
+import { getNodeWithToken, proxyToNode } from '../services/nodeProxyFetch';
+import { notifyAlert } from '../services/notify';
 
 const router = Router();
 
 router.use(authMiddleware);
 
-async function getNodeWithToken(nodeId: string) {
-  const result = await pool.query('SELECT * FROM nodes WHERE id = $1', [nodeId]);
-  if (result.rows.length === 0) return null;
-  return result.rows[0];
-}
-
-async function proxyToNode(
-  node: { ip: string; port: number; token: string },
-  method: string,
-  path: string,
-  body?: any
-): Promise<{ status: number; data: any }> {
-  const url = `http://${node.ip}:${node.port}/api/proxies${path}`;
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${node.token}`,
-  };
-
-  const options: RequestInit = { method, headers };
-  if (body && (method === 'POST' || method === 'PUT')) {
-    options.body = JSON.stringify(body);
+// Batch: pause | unpause | restart
+router.post('/:nodeId/proxies/batch', async (req: AuthRequest, res: Response) => {
+  try {
+    const { action, proxyIds } = req.body as { action?: string; proxyIds?: string[] };
+    if (!action || !['pause', 'unpause', 'restart'].includes(action) || !Array.isArray(proxyIds)) {
+      res.status(400).json({ error: 'action (pause|unpause|restart) and proxyIds[] required' });
+      return;
+    }
+    const node = await getNodeWithToken(req.params.nodeId);
+    if (!node) {
+      res.status(404).json({ error: 'Node not found' });
+      return;
+    }
+    const results: { id: string; ok: boolean; status: number; error?: string }[] = [];
+    for (const pid of proxyIds) {
+      const path = action === 'restart' ? `/${pid}/restart` : `/${pid}/${action}`;
+      try {
+        const r = await proxyToNode(node, 'POST', path);
+        const ok = r.status >= 200 && r.status < 300;
+        results.push({
+          id: pid,
+          ok,
+          status: r.status,
+          error: ok ? undefined : typeof r.data?.error === 'string' ? r.data.error : JSON.stringify(r.data),
+        });
+        if (ok) {
+          auditReq(req, `proxy.batch_${action}`, 'proxy', pid, { nodeId: req.params.nodeId });
+        }
+      } catch (e: any) {
+        results.push({ id: pid, ok: false, status: 0, error: e.message });
+      }
+    }
+    const failed = results.filter((x) => !x.ok);
+    if (failed.length > 0) {
+      void notifyAlert(
+        'Массовая операция: часть ошибок',
+        `Нода ${req.params.nodeId}, ${action}, ошибок ${failed.length}/${results.length}. ID: ${failed.map((f) => f.id).join(', ')}`
+      );
+    }
+    res.json({ results });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
   }
+});
 
-  const response = await fetch(url, options);
-  const data = await response.json();
-  return { status: response.status, data };
-}
+// Batch SNI/domain update
+router.post('/:nodeId/proxies/batch-domain', async (req: AuthRequest, res: Response) => {
+  try {
+    const { proxyIds, domain } = req.body as { proxyIds?: string[]; domain?: string };
+    if (!Array.isArray(proxyIds) || !domain || typeof domain !== 'string') {
+      res.status(400).json({ error: 'proxyIds[] and domain required' });
+      return;
+    }
+    const node = await getNodeWithToken(req.params.nodeId);
+    if (!node) {
+      res.status(404).json({ error: 'Node not found' });
+      return;
+    }
+    const results: { id: string; ok: boolean; error?: string }[] = [];
+    for (const pid of proxyIds) {
+      const r = await proxyToNode(node, 'PUT', `/${pid}`, { domain });
+      const ok = r.status >= 200 && r.status < 300;
+      results.push({ id: pid, ok, error: ok ? undefined : JSON.stringify(r.data) });
+      if (ok) auditReq(req, 'proxy.batch_domain', 'proxy', pid, { nodeId: req.params.nodeId, domain });
+    }
+    const failed = results.filter((x) => !x.ok);
+    if (failed.length > 0) {
+      void notifyAlert(
+        'Смена SNI: часть ошибок',
+        `Нода ${req.params.nodeId}, домен ${domain}, ошибок ${failed.length}/${results.length}. ID: ${failed.map((f) => f.id).join(', ')}`
+      );
+    }
+    res.json({ results });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Clone proxy (same or another node)
+router.post('/:nodeId/proxies/:proxyId/clone', async (req: AuthRequest, res: Response) => {
+  try {
+    const { targetNodeId, domain, name } = req.body as {
+      targetNodeId?: number;
+      domain?: string;
+      name?: string;
+    };
+    const srcNode = await getNodeWithToken(req.params.nodeId);
+    if (!srcNode) {
+      res.status(404).json({ error: 'Node not found' });
+      return;
+    }
+    const tgtId = targetNodeId != null ? String(targetNodeId) : req.params.nodeId;
+    const tgtNode = await getNodeWithToken(tgtId);
+    if (!tgtNode) {
+      res.status(404).json({ error: 'Target node not found' });
+      return;
+    }
+    const g = await proxyToNode(srcNode, 'GET', `/${req.params.proxyId}`);
+    if (g.status !== 200) {
+      res.status(g.status).json(g.data);
+      return;
+    }
+    const p = g.data;
+    const createBody = {
+      name: name || `${p.name || 'Proxy'} (копия)`,
+      note: p.note || '',
+      maxConnections: p.maxConnections,
+      listenPort: p.listenPort,
+      vpnSubscription: p.vpnSubscription,
+      domain: domain || undefined,
+    };
+    const c = await proxyToNode(tgtNode, 'POST', '', createBody);
+    if (c.status >= 200 && c.status < 300 && c.data?.id) {
+      auditReq(req, 'proxy.clone', 'proxy', String(c.data.id), {
+        fromProxyId: req.params.proxyId,
+        fromNodeId: req.params.nodeId,
+        targetNodeId: tgtId,
+      });
+    }
+    res.status(c.status).json(c.data);
+  } catch (error: any) {
+    res.status(502).json({ error: error.message });
+  }
+});
+
+// Panel-only tags for a proxy
+router.get('/:nodeId/proxies/:proxyId/panel-meta', async (req: AuthRequest, res: Response) => {
+  try {
+    const r = await pool.query('SELECT tags FROM proxy_meta WHERE node_id = $1 AND proxy_id = $2', [
+      req.params.nodeId,
+      req.params.proxyId,
+    ]);
+    res.json({ tags: r.rows[0]?.tags?.length ? r.rows[0].tags : [] });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/:nodeId/proxies/:proxyId/panel-meta', async (req: AuthRequest, res: Response) => {
+  try {
+    const { tags } = req.body as { tags?: string[] };
+    if (!Array.isArray(tags) || !tags.every((t) => typeof t === 'string')) {
+      res.status(400).json({ error: 'tags must be string[]' });
+      return;
+    }
+    await pool.query(
+      `INSERT INTO proxy_meta (node_id, proxy_id, tags) VALUES ($1, $2, $3::text[])
+       ON CONFLICT (node_id, proxy_id) DO UPDATE SET tags = EXCLUDED.tags`,
+      [req.params.nodeId, req.params.proxyId, tags]
+    );
+    auditReq(req, 'proxy.tags_update', 'proxy', req.params.proxyId, { nodeId: req.params.nodeId });
+    res.json({ tags });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // List proxies on a node
 router.get('/:nodeId/proxies', async (req: AuthRequest, res: Response) => {

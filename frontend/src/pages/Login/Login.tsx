@@ -3,7 +3,10 @@ import { useLogin } from '../../hooks/useLogin';
 import s from './Login.module.scss';
 
 export default function Login() {
-  const { username, setUsername, password, setPassword, error, loading, handleSubmit } = useLogin();
+  const {
+    username, setUsername, password, setPassword, totp, setTotp, needsTotp,
+    error, loading, handleSubmit,
+  } = useLogin();
 
   return (
     <div className={s.container}>
@@ -35,6 +38,18 @@ export default function Login() {
               size="l"
             />
           </div>
+          {(needsTotp || totp) && (
+            <div className={s.field}>
+              <label>Код 2FA (TOTP)</label>
+              <TextInput
+                value={totp}
+                onUpdate={setTotp}
+                placeholder="000000"
+                size="l"
+                autoComplete="one-time-code"
+              />
+            </div>
+          )}
           <Button
             type="submit"
             view="action"

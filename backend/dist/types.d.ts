@@ -15,4 +15,6 @@ export interface User {
 export interface JwtPayload {
     userId: number;
     username: string;
+    /** Session version; must match users.token_version. */
+    tv?: number;
 }

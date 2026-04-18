@@ -29,6 +29,19 @@ router.get('/all', async (req, res) => {
         const data = results
             .filter((r) => r.status === 'fulfilled')
             .map((r) => r.value);
+        const metaResult = await db_1.pool.query('SELECT node_id, proxy_id, tags FROM proxy_meta');
+        const tagMap = new Map();
+        for (const m of metaResult.rows) {
+            tagMap.set(`${m.node_id}:${m.proxy_id}`, Array.isArray(m.tags) ? m.tags : []);
+        }
+        for (const block of data) {
+            if (!Array.isArray(block.proxies))
+                continue;
+            block.proxies = block.proxies.map((p) => ({
+                ...p,
+                tags: tagMap.get(`${block.nodeId}:${p.id}`) || [],
+            }));
+        }
         res.json(data);
     }
     catch (error) {

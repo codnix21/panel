@@ -1,6 +1,5 @@
 import express from 'express';
 import cors from 'cors';
-import { config } from './config';
 import { pool } from './db';
 import { runMigrations, createAdminUser } from './db/migrations';
 import { ipAllowlistMiddleware } from './middleware/ipAllowlist';
@@ -10,6 +9,13 @@ import nodeRoutes from './routes/nodes';
 import proxyRoutes from './routes/proxies';
 import allProxiesRoutes from './routes/allProxies';
 import auditRoutes from './routes/audit';
+import dashboardRoutes from './routes/dashboard';
+import searchRoutes from './routes/search';
+import templatesRoutes from './routes/templates';
+import backupStatusRoutes from './routes/backupStatus';
+import exportCsvRoutes from './routes/exportCsv';
+import { startNodeHealthPoller } from './services/nodeHealthPoller';
+import { config } from './config';
 
 const app = express();
 
@@ -26,6 +32,11 @@ app.use('/api/nodes', nodeRoutes);
 app.use('/api/nodes', proxyRoutes);
 app.use('/api/proxies', allProxiesRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/proxy-templates', templatesRoutes);
+app.use('/api/backup', backupStatusRoutes);
+app.use('/api/export', exportCsvRoutes);
 
 app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
@@ -50,6 +61,8 @@ async function bootstrap(): Promise<void> {
     if (adminUser && adminPass) {
       await createAdminUser(adminUser, adminPass);
     }
+
+    startNodeHealthPoller();
 
     app.listen(config.port, '0.0.0.0', () => {
       console.log(`Panel backend running on port ${config.port}`);

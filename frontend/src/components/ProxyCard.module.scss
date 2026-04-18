@@ -3,16 +3,43 @@
   cursor: pointer;
 }
 
+.cardSelected {
+  outline: 2px solid var(--g-color-line-brand);
+}
+
 .header {
   display: flex;
   align-items: center;
+  gap: 8px;
   justify-content: space-between;
   margin-bottom: 12px;
+}
+
+.checkbox {
+  flex-shrink: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
 }
 
 .name {
   font-weight: 600;
   font-size: 15px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tags {
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+  margin-bottom: 8px;
+  line-height: 1.35;
 }
 
 .note {

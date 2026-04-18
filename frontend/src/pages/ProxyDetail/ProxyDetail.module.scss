@@ -1,20 +1,53 @@
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 24px;
+}
+
+@media (max-width: 560px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 .errorWrap {
   margin-bottom: 16px;
 }
 
+.tagsHint {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--g-color-text-secondary);
+  line-height: 1.4;
+}
+
+.tagsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+
+  :global(.g-text-input) {
+    flex: 1;
+    min-width: min(100%, 280px);
+  }
+}
+
 .diagCard {
-  padding: 20px;
+  padding: 16px;
   margin-bottom: 20px;
 
   h3 {
     margin: 0 0 12px;
+  }
+}
+
+@media (min-width: 768px) {
+  .diagCard {
+    padding: 20px;
   }
 }
 
@@ -25,6 +58,14 @@
   font-size: 13px;
   margin-bottom: 10px;
   align-items: start;
+}
+
+@media (max-width: 560px) {
+  .diagRow {
+    grid-template-columns: 1fr;
+    gap: 4px 0;
+    margin-bottom: 14px;
+  }
 }
 
 .diagLabel {
@@ -68,6 +109,17 @@
 
   h3 {
     margin: 0 0 12px;
+  }
+}
+
+.logsExplain {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--g-color-text-secondary);
+
+  code {
+    font-size: 11px;
   }
 }
 
@@ -155,8 +207,16 @@
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 16px;
+}
+
+@media (max-width: 480px) {
+  .actions button {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .chartCard {
@@ -168,6 +228,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 16px;
 
   h3 {
@@ -177,6 +239,7 @@
 
 .chartButtons {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -187,7 +250,15 @@
 }
 
 .chartWrap {
-  height: 350px;
+  height: min(350px, 55vh);
+  min-height: 220px;
+}
+
+@media (max-width: 560px) {
+  .chartWrap {
+    height: min(280px, 45vh);
+    min-height: 200px;
+  }
 }
 
 .ipCard {

@@ -30,7 +30,9 @@ router.use(authMiddleware);
 // List all nodes
 router.get('/', async (_req: AuthRequest, res: Response) => {
   try {
-    const result = await pool.query('SELECT id, name, ip, port, created_at FROM nodes ORDER BY created_at DESC');
+    const result = await pool.query(
+      'SELECT id, name, ip, port, created_at, last_seen_at FROM nodes ORDER BY created_at DESC'
+    );
     res.json(result.rows);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

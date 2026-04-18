@@ -6,6 +6,8 @@ export function useLogin() {
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [totp, setTotp] = useState('');
+  const [needsTotp, setNeedsTotp] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -15,14 +17,31 @@ export function useLogin() {
     setLoading(true);
 
     try {
-      await login(username, password);
+      await login(username, password, needsTotp ? totp : undefined);
       navigate('/nodes');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      const msg = err.message || 'Login failed';
+      if (msg === 'totp_required') {
+        setNeedsTotp(true);
+        setError('Введите код из приложения-аутентификатора');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  return { username, setUsername, password, setPassword, error, loading, handleSubmit };
+  return {
+    username,
+    setUsername,
+    password,
+    setPassword,
+    totp,
+    setTotp,
+    needsTotp,
+    error,
+    loading,
+    handleSubmit,
+  };
 }

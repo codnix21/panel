@@ -1,0 +1,44 @@
+.top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+}
+
+.card {
+  padding: 16px;
+  margin-bottom: 16px;
+  max-width: min(100%, 720px);
+
+  h3 {
+    margin: 0 0 12px;
+  }
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--g-color-text-complementary);
+
+  li {
+    margin-bottom: 8px;
+  }
+
+  code {
+    font-size: 12px;
+  }
+}
+
+.note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--g-color-text-secondary);
+}

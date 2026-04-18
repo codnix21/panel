@@ -3,9 +3,35 @@
 }
 
 .subtitle {
-  margin: 0 0 20px;
+  margin: 0 0 12px;
   color: var(--g-color-text-secondary);
   font-size: 14px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: flex-start;
+
+  :global(.g-text-input) {
+    flex: 1;
+    min-width: min(100%, 200px);
+  }
+}
+
+.toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.range {
+  font-size: 13px;
+  color: var(--g-color-text-secondary);
 }
 
 .error {

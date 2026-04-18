@@ -31,4 +31,20 @@ export const config = {
     user: process.env.DB_USER || 'mtproto',
     password: process.env.DB_PASSWORD || 'mtproto',
   },
+  /** How often the panel pings nodes’ /api/health (ms). */
+  healthPollIntervalMs: Math.max(5000, parseInt(process.env.HEALTH_POLL_INTERVAL_MS || '60000', 10)),
+  /** If last_seen_at is older than this, UI may show “offline” / stale (ms). */
+  healthStaleAfterMs: Math.max(10000, parseInt(process.env.HEALTH_STALE_AFTER_MS || '120000', 10)),
+  /** Optional: POST JSON alerts (node down, batch partial failure). */
+  notifyWebhookUrl: (process.env.NOTIFY_WEBHOOK_URL || '').trim() || undefined,
+  telegramBotToken: (process.env.TELEGRAM_BOT_TOKEN || '').trim() || undefined,
+  telegramChatId: (process.env.TELEGRAM_CHAT_ID || '').trim() || undefined,
+  /**
+   * Optional substring to match against node proxy image id/name from /api/info.
+   * If set and a node’s image doesn’t include this, dashboard shows update hint.
+   */
+  expectedProxyImageRef: (process.env.EXPECTED_PROXY_IMAGE_REF || '').trim() || undefined,
+  expectedNginxImageRef: (process.env.EXPECTED_NGINX_IMAGE_REF || '').trim() || undefined,
+  /** Path to JSON file written by external backup cron: { "lastBackupAt": "ISO-8601" } */
+  backupStatusFile: (process.env.BACKUP_STATUS_FILE || '').trim() || undefined,
 };

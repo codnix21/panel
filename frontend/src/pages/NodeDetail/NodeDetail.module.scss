@@ -1,20 +1,40 @@
 .header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 24px;
+}
+
+@media (max-width: 560px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    button {
+      width: 100%;
+    }
+  }
 }
 
 .proxiesHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 16px;
+}
+
+@media (max-width: 480px) {
+  .proxiesHeader button {
+    width: 100%;
+  }
 }
 
 .proxyGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 16px;
 }
 
@@ -93,4 +113,56 @@
 
 .saveRow {
   margin-top: 8px;
+}
+
+.imageHint {
+  font-size: 11px;
+  color: var(--g-color-text-secondary);
+  max-width: 420px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.batchCard {
+  padding: 16px;
+  margin-bottom: 20px;
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+  }
+}
+
+.batchHint {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--g-color-text-secondary);
+  line-height: 1.45;
+}
+
+.batchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  align-items: center;
+}
+
+.batchConfirmPreview {
+  margin: 0 0 8px;
+  font-size: 14px;
+}
+
+.batchIdPreview {
+  margin: 0;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-all;
+  background: var(--g-color-base-generic);
+  border-radius: 8px;
+  max-height: 160px;
+  overflow-y: auto;
 }

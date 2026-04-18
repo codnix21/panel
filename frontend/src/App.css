@@ -1,32 +1,85 @@
-html, body, #root {
+/* Brand overrides on Gravity dark theme */
+body.g-root_theme_dark {
+  --g-color-base-background: #0c1222;
+  --g-color-base-generic: rgba(148, 163, 184, 0.08);
+  --g-color-base-generic-hover: rgba(148, 163, 184, 0.14);
+  --g-color-base-brand: #2dd4bf;
+  --g-color-base-brand-hover: #14b8a6;
+  --g-color-base-selection: rgba(45, 212, 191, 0.22);
+  --g-color-base-selection-hover: rgba(45, 212, 191, 0.32);
+  --g-color-line-generic: rgba(148, 163, 184, 0.2);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
+  min-height: 100dvh;
   background: var(--g-color-base-background);
   color: var(--g-color-text-primary);
 }
 
+/* Main scroll area: avoid double scroll with AsideHeader */
+.app-content-toolbar {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .app-content {
   flex: 1;
-  padding: 24px;
+  padding: 16px;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
   max-width: 100%;
   width: 100%;
   margin: 0 auto;
   box-sizing: border-box;
   overflow-y: auto;
-  height: 100vh;
+  overflow-x: hidden;
+  height: 100%;
+  min-height: 0;
+}
+
+@media (min-width: 768px) {
+  .app-content {
+    padding: 24px 28px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}
+
+@media (min-width: 1200px) {
+  .app-content {
+    padding: 28px 36px;
+    max-width: 1600px;
+  }
+}
+
+.app-logo-text {
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 /* shared field style used by Nodes card inline */
 .proxy-card-field {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
   padding: 4px 0;
   font-size: 13px;
 }
 
 .proxy-card-field .label {
   color: var(--g-color-text-secondary);
+  flex-shrink: 0;
 }
 
 .dialog-field {
@@ -42,7 +95,17 @@ html, body, #root {
 
 .toast-message {
   position: fixed;
-  bottom: 24px;
-  right: 24px;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  right: max(24px, env(safe-area-inset-right));
+  left: auto;
   z-index: 1000;
+  max-width: calc(100vw - 32px);
+}
+
+@media (max-width: 480px) {
+  .toast-message {
+    left: 16px;
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+  }
 }

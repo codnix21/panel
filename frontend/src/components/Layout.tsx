@@ -1,14 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { AsideHeader, FooterItem } from '@gravity-ui/navigation';
+import { useMediaQuery } from '../hooks/useMediaQuery';
 import {
   Server,
   ArrowRightFromSquare,
   Gear,
   PlugConnection,
   ListUl,
+  ChartBar,
+  FileText,
 } from '@gravity-ui/icons';
 import { logout } from '../api';
+import GlobalSearch from './GlobalSearch';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -17,11 +21,23 @@ interface LayoutProps {
 export default function Layout({ children }: LayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [compact, setCompact] = useState(false);
+  const isNarrow = useMediaQuery('(max-width: 900px)');
+  const [compact, setCompact] = useState(isNarrow);
+
+  useEffect(() => {
+    setCompact(isNarrow);
+  }, [isNarrow]);
 
   const currentPath = location.pathname;
 
   const menuItems = [
+    {
+      id: 'dashboard',
+      title: 'Сводка',
+      icon: ChartBar,
+      current: currentPath === '/dashboard',
+      onItemClick: () => navigate('/dashboard'),
+    },
     {
       id: 'nodes',
       title: 'Ноды',
@@ -35,6 +51,13 @@ export default function Layout({ children }: LayoutProps) {
       icon: PlugConnection,
       current: currentPath === '/proxies',
       onItemClick: () => navigate('/proxies'),
+    },
+    {
+      id: 'docs',
+      title: 'Справка',
+      icon: FileText,
+      current: currentPath === '/docs',
+      onItemClick: () => navigate('/docs'),
     },
     {
       id: 'settings',
@@ -54,14 +77,19 @@ export default function Layout({ children }: LayoutProps) {
 
   return (
     <AsideHeader
+      className="app-aside-header"
       compact={compact}
       onChangeCompact={setCompact}
       menuItems={menuItems}
       logo={{
         text: 'MTProto Panel',
+        className: 'app-logo-text',
       }}
       renderContent={() => (
         <div className="app-content">
+          <div className="app-content-toolbar">
+            <GlobalSearch />
+          </div>
           {children}
         </div>
       )}

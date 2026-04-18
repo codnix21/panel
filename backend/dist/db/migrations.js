@@ -44,6 +44,34 @@ async function runMigrations() {
         await client.query(`
       CREATE INDEX IF NOT EXISTS idx_audit_log_created_at ON audit_log (created_at DESC);
     `);
+        await client.query(`
+      ALTER TABLE nodes ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP;
+    `);
+        await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_secret VARCHAR(128);
+    `);
+        await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS totp_enabled BOOLEAN DEFAULT FALSE;
+    `);
+        await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INTEGER NOT NULL DEFAULT 0;
+    `);
+        await client.query(`
+      CREATE TABLE IF NOT EXISTS proxy_templates (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        preset JSONB NOT NULL DEFAULT '{}',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+        await client.query(`
+      CREATE TABLE IF NOT EXISTS proxy_meta (
+        node_id INTEGER NOT NULL REFERENCES nodes(id) ON DELETE CASCADE,
+        proxy_id VARCHAR(64) NOT NULL,
+        tags TEXT[] DEFAULT '{}',
+        PRIMARY KEY (node_id, proxy_id)
+      );
+    `);
         console.log('Database migrations completed');
     }
     finally {
